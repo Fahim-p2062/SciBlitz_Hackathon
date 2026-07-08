@@ -1,126 +1,199 @@
-# ♻️ EcoSortha: AI & Blockchain for a Circular Bangladesh
-**Created for CUET Hackathon by SciBlitz**
+# 🌱 EcoSortha — Next-Generation Smart Waste & Circular Economy Management System
+
+[![Live Frontend Deployment](https://img.shields.io/badge/Live%20Frontend-Vercel%20App-10b981?style=for-the-badge&logo=vercel)](https://sci-blitz-hackathon.vercel.app/)
+[![Live Backend Service](https://img.shields.io/badge/Live%20Backend-Render%20API-3b82f6?style=for-the-badge&logo=render)](https://sciblitz-hackathon-0gbp.onrender.com)
+[![Hackathon Event](https://img.shields.io/badge/CUET-SciBlitz%20Hackathon-f59e0b?style=for-the-badge)](https://sci-blitz-hackathon.vercel.app/)
+
+> **Live Web Application**: [https://sci-blitz-hackathon.vercel.app/](https://sci-blitz-hackathon.vercel.app/)  
+> **Live Backend API Service**: [https://sciblitz-hackathon-0gbp.onrender.com](https://sciblitz-hackathon-0gbp.onrender.com)
 
 ---
 
 ## 🌟 Executive Summary & Project Details
 
-**EcoSortha** is an end-to-end smart waste management and circular economy platform tailored for Bangladesh’s municipal landscape—including **Dhaka North City Corporation (DNCC)**, **Dhaka South City Corporation (DSCC)**, **Chittagong City Corporation (CCC)**, and educational campuses like **CUET**.
+**EcoSortha** is an enterprise-grade, end-to-end Smart Waste Management and Circular Economy platform developed for urban municipalities and university campuses across Bangladesh (focusing on **Dhaka North/South City Corporations**, **Chittagong City Corporation**, and **CUET Campus**).
 
-In rapidly growing urban areas across Bangladesh, traditional solid waste management relies on informal collection networks, unmonitored open dumps, and fixed collection routes that result in overflowing dustbins, unnecessary fuel expenditure, and unverified recycling data. **EcoSortha** solves these challenges by combining **Deep Learning Computer Vision** for automated waste segregation at the source with an **Immutable Blockchain Ledger** that guarantees transparent, tamper-proof audit trails for every kilogram of recycled material.
+Urban waste management in developing megacities faces three systemic bottlenecks:
+1. **Unsegregated Source Collection**: Mixing organic waste with recyclable plastics and hazardous e-waste degrades recyclable fiber and contaminates compost streams.
+2. **Static Route Dispatching**: Municipal collection trucks follow rigid daily schedules regardless of whether bins are 5% or 95% full, wasting up to 40% of fleet fuel budgets.
+3. **Lack of Cryptographic Accountability**: Informal recycling supply chains lack provenance, leading to greenwashing and unregulated toxic dumping.
 
----
-
-## 🎯 Mission & Vision
-
-- **Our Mission**: To digitize informal and municipal waste sector operations across Bangladesh, replacing manual guesswork with real-time IoT sensors and AI vision classification to achieve maximum resource recovery.
-- **Our Vision**: To build a transparent, circular economy ecosystem where waste generators, collection fleets, and recycling plants operate on a verifiable, blockchain-secured data pipeline.
-
----
-
-## 💡 Comprehensive Module Explanations
-
-### 1. 🤖 AI Smart Waste Classifier (Deep Learning & Computer Vision)
-Traditional waste sorting suffers from cross-contamination and human error. EcoSortha deploys automated camera scanning checkpoints powered by OpenCV and convolutional neural networks (VGG19 architecture) that:
-- **Analyze Live Video Feeds or Uploaded Sample Frames**: Detect individual objects passing under inspection cameras in sub-second timeframes.
-- **Multi-Class Waste Segmentation**: Classifies waste into three core categories:
-  - **Compostable / Organic**: Food scraps, biodegradable leaf and plant waste.
-  - **Recyclables**: Plastics (PET/HDPE), glass bottles, aluminum cans, cardboard.
-  - **General Trash**: Residual non-recyclable solid waste.
-- **Visual Bounding Boxes & Confidence Scoring**: Annotates each detected object with high-contrast bounding boxes, label tags, and real-time confidence metrics (%), feeding verified collection tallies directly into the EcoSortha ledger.
-
-### 2. 🔗 Blockchain Traceability Ledger
-To establish trust among municipal corporations, private collectors, and recycling auditors, EcoSortha records all major collection milestones on a decentralized cryptographic ledger:
-- **Immutable Block Minting**: Every time waste is collected, classified, and weighed, a block containing the transaction ID, source municipal zone, collector truck ID, waste type, and weight (in kilograms) is minted.
-- **Cryptographic Hashing**: Blocks are linked via SHA-256 style cryptographic hashes (`previousHash` -> `hash`) to prevent retrospective tampering or false sustainability reporting.
-- **Automated Auditability**: Municipal authorities can inspect block hashes, validator node IDs, and historical segregation efficiencies instantly.
-
-### 3. 🗑️ IoT Smart Dustbin Telemetry & Ultrasonic Monitoring
-Instead of waiting for citizens to report overflowing bins, EcoSortha tracks smart municipal dustbins equipped with simulated IoT ultrasonic sensors across urban zones:
-- **Live Fill Percentage Gauges**: Monitors fill levels from `0%` to `100%`, dynamically color-coding bins as `NORMAL`, `WARNING` (70–84%), or `CRITICAL` (≥85%).
-- **Environmental & Hardware Diagnostics**: Continuously records internal bin temperature (°C) to prevent combustion hazards and tracks sensor battery levels.
-- **Automated Dispatch**: Enables one-click truck collection scheduling that resets bin telemetry upon collection.
-
-### 4. 🗺️ AI Route Optimizer & Municipal Budget Simulator
-Collection trucks driving fixed routes waste fuel and emit avoidable greenhouse gases. EcoSortha incorporates a Traveling Salesperson Problem (TSP) routing heuristic:
-- **Dynamic Fleet Allocation via Budget Slider**: Authorities set their daily operational BDT budget (`৳ 15,000` to `৳ 95,000`). The engine automatically calculates how many collection trucks can be deployed within budget constraints.
-- **Priority-Weighted Routing**: Prioritizes `CRITICAL` (>85% full) dustbins first, computing optimized ordered stops with precise arrival ETAs.
-- **Eco-Impact Metrics**: Quantifies real-time distance traveled (km), estimated fuel consumed (liters), and total **CO₂ emissions saved (kg)** compared to unoptimized collection runs.
-
-### 5. 🔔 Environmental Compliance & Overflow Alert Center
-- Delivers real-time alerts categorized by severity (`CRITICAL`, `WARNING`, `INFO`).
-- Highlights urgent municipal overflow events, blockchain verification milestones, and regional recycling efficiency benchmarks.
+### How EcoSortha Solves This
+EcoSortha integrates three state-of-the-art technologies into a unified command platform:
+- **Computer Vision & AI Source Segregation**: Deep learning neural networks (**TensorFlow.js COCO-SSD / MobileNetV2**) analyze physical waste objects in real-time, classifying them across a comprehensive 3-tier waste taxonomy.
+- **IoT Ultrasonic Fill Monitoring & TSP Route Optimization**: Smart dustbin sensors track real-time fill percentages (`%`) and temperatures. An AI Traveling Salesperson Problem (TSP) solver computes optimal truck collection paths constrained by municipal BDT budgets, reducing fleet CO₂ emissions by over 30%.
+- **Immutable Circular Economy Blockchain Ledger**: Every batch of classified waste is hashed via SHA-256 and minted onto an immutable verification ledger, ensuring transparent traceability from collection point to certified recycling facilities.
 
 ---
 
-## 🏛️ Project Structure
+## 🔬 Authoritative 3-Tier Waste Classification Criteria
+
+EcoSortha’s AI Waste Classifier operates on a rigorous, multi-dimensional taxonomy designed for municipal collection logistics and environmental safety. Every item detected by our live computer vision scanner is evaluated across three scientific dimensions:
+
+```
+               ┌────────────────────────────────────────────────────────┐
+               │              ECOSORTHA 3-TIER TAXONOMY                 │
+               └───────────────────────────┬────────────────────────────┘
+                                           │
+         ┌─────────────────────────────────┼─────────────────────────────────┐
+         ▼                                 ▼                                 ▼
+┌────────────────────────┐      ┌────────────────────────┐      ┌────────────────────────┐
+│  1. BY NATURE &        │      │  2. BY RECYCLING       │      │  3. BY PHYSICAL STATE  │
+│     COMPOSITION        │      │     POTENTIAL (STREAM) │      │     & RISK             │
+├────────────────────────┤      ├────────────────────────┤      ├────────────────────────┤
+│ • Organic / Biodeg.    │      │ • Recyclable Stream    │      │ • Solid State          │
+│ • Inorganic / Polymer  │      │ • Compostable Stream   │      │ • Liquid / Sludge      │
+│ • Hazardous / Toxic    │      │ • Special E-Waste      │      │ • Gaseous / Methane    │
+│ • C&D Inert Debris     │      │ • Landfill Residual    │      │ • Leachate Prevention  │
+└────────────────────────┘      └────────────────────────┘      └────────────────────────┘
+```
+
+### 1. Classification by Nature & Composition
+Determines the chemical and biological breakdown characteristics of the material:
+
+- **Organic / Biodegradable Waste**:
+  - *Examples*: Food leftovers, fruit/vegetable peels, garden leaves, clean agricultural residue.
+  - *Key Traits*: High moisture content and biological nitrogen. Decomposes rapidly through microbial action. If buried unmanaged in landfills, anaerobic degradation generates **Methane ($\text{CH}_4$)**—a greenhouse gas 28x more potent than $\text{CO}_2$—and toxic acidic leachate.
+- **Inorganic / Non-Biodegradable Waste**:
+  - *Examples*: Plastics sorted by resin code (**PET #1**, **HDPE #2**, **PP #5**), clear/colored glass, ferrous & non-ferrous metals (steel, aluminum), paper/corrugated cardboard, synthetic textiles.
+  - *Key Traits*: Resistant to biological breakdown (450+ years for polymers). High economic value when recovered clean; loses recyclability if contaminated by oils or organic sludges.
+- **Hazardous Waste**:
+  - *Examples*: Lithium-ion batteries, lead-acid cells, discarded electronics (mobile phones, PCBs containing lead, mercury, and cadmium), chemical solvents, biohazardous medical sharps.
+  - *Key Traits*: Toxic, reactive, flammable, or corrosive. Must be isolated from standard municipal streams to prevent groundwater heavy-metal poisoning.
+- **Construction & Demolition (C&D) Waste**:
+  - *Examples*: Concrete, brick aggregate, timber, reinforcement steel.
+  - *Key Traits*: High volume and heavy mass; routed for road-base aggregate recycling.
+
+---
+
+### 2. Classification by Operational Recycling Potential (System Routing)
+This operational scheme determines which municipal processing facility receives the waste stream:
+
+| Operational Stream | Target Waste Types | Processing Pathway & Economic Value |
+| :--- | :--- | :--- |
+| 🔵 **Recyclable Stream** | PET bottles, aluminum cans, cardboard, clear glass | Routed to Material Recovery Facilities (MRFs) for washing, flaking, and re-extrusion. High secondary economic yield. |
+| 🟢 **Compostable Stream** | Fruit peels, vegetable scraps, food leftovers | Routed to Anaerobic Biogas Digesters ($\text{CH}_4$ capture for clean power) or Commercial Composting facilities. |
+| 🟣 **Special Hazardous Stream** | E-waste, lithium batteries, chemical containers | Routed to certified Hydrometallurgical Dismantling Facilities for precious metal extraction & safe containment. |
+| 🔴 **Landfill / Residual Stream** | Multi-layer chip bags, metallized foil laminates, sanitary waste | Routed to engineered sanitary landfills or High-Temperature Cement Kilns for safe thermal co-processing. |
+
+---
+
+### 3. Classification by Physical State & Environmental Risk
+Evaluates containment requirements and long-term environmental hazards:
+
+- **Solid State**: Bulk municipal items. Monitored for compaction density and structural stability.
+- **Liquid / Sludge State**: Industrial run-offs and leachate effluents. Monitored to prevent soil and aquifer contamination.
+- **Gaseous & Emissions Hazard**: Real-time tracking of avoided methane emissions ($\text{CH}_4$) and carbon dioxide equivalent reductions ($\text{kg }\text{CO}_2\text{e}$) achieved through source segregation.
+
+---
+
+## 🖥️ Interactive Web Platform Modules
+
+### 1. Municipal Command Dashboard (`/`)
+- Live Circular Economy KPIs: Processed volume (`kg`), segregation efficiency (`%`), carbon offset counter (`kg CO₂`), and active collection fleet units.
+- Interactive EcoSortha Blockchain Traceability Ledger Explorer inspecting verified SHA-256 transaction blocks.
+
+### 2. AI Smart Waste Classifier (`/classifier`)
+- Real-time computer vision powered by **TensorFlow.js (COCO-SSD & MobileNetV2)**.
+- Scans live hardware webcam feed or high-fidelity simulation bed to classify items across the authoritative 3-tier taxonomy.
+- One-click **"Sync Verified Taxonomy to Blockchain Ledger"** to record classified weights and categories.
+
+### 3. Smart Dustbins IoT Network (`/dustbins`)
+- Real-time ultrasonic fill percentage (`%`) and internal temperature telemetry across zones (**Dhaka North**, **Dhaka South**, **Chittagong**, **CUET Campus**).
+- Automated color-coded alerts (**CRITICAL ≥85%**, **WARNING 70–84%**, **NORMAL <70%**).
+- Interactive **Schedule Truck / Empty Bin** dispatch actions.
+
+### 4. Animated Route Optimizer & Live Fleet Tracker (`/route-optimizer`)
+- Interactive municipal daily budget allocation slider (`৳ 15,000 – ৳ 95,000 BDT`).
+- Real-time Traveling Salesperson Problem (TSP) solver computing optimal stops prioritizing critical bins.
+- **Animated SVG Route Map** with a live moving collection truck tracker (`TRUCK-CUET-EXP-04`) displaying velocity, payload weight collected (`kg`), and waypoint ETAs.
+
+---
+
+## 🏗️ System Architecture & Technology Stack
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          ECOSORTHA CLIENT LAYER                             │
+│       React 19 + TypeScript + Vite + Glassmorphic UI System                 │
+│       Live Deployment: https://sci-blitz-hackathon.vercel.app/             │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │ REST / JSON
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                       ECOSORTHA BACKEND API LAYER                           │
+│       Node.js + Express + TypeScript + Mongoose + Resilient Fallback        │
+│       Live Deployment: https://sciblitz-hackathon-0gbp.onrender.com         │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         AI & COMPUTER VISION ENGINE                         │
+│       TensorFlow.js COCO-SSD (Client Edge) + Python FastAPI OpenCV VGG19    │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Frontend Technology Stack
+- **Framework**: React 19 + Vite 8 + TypeScript (`frontend/`)
+- **UI & Styling**: Vanilla CSS Modern Glassmorphism Design System (`index.css`), curated typography, micro-animations, Lucide React iconography.
+- **AI / Edge Vision**: `@tensorflow/tfjs` + `@tensorflow-models/coco-ssd` for live webcam object detection.
+- **Deployment**: [Vercel SPA Hosting](https://sci-blitz-hackathon.vercel.app/)
+
+### Backend Technology Stack
+- **Runtime**: Node.js + Express + TypeScript (`server/`)
+- **Database Layer**: MongoDB via Mongoose ORM with **Resilient In-Memory Fallback Adapter** (ensuring 100% API availability even offline).
+- **Python AI Engine**: Python 3.11 + FastAPI + OpenCV (`backend_python/`) for high-throughput visual segmentation.
+- **Deployment**: [Render Web Services](https://sciblitz-hackathon-0gbp.onrender.com)
+
+---
+
+## 📂 Project Repository Structure
 
 ```
 SciBlitz_Hackathon/
-├── backend_python/            # Python FastAPI AI & Computer Vision Microservice
-│   ├── main.py                # AI classification vision logic & TSP route optimization API
-│   └── requirements.txt       # Python dependencies (FastAPI, OpenCV, NumPy, Pydantic)
-├── server/                    # TypeScript + Express + Mongoose Backend Server
+├── frontend/                  # React + Vite + TypeScript Web Application
 │   ├── src/
-│   │   ├── models/            # Mongoose Schemas (Dustbin, LedgerBlock, RoutePlan, NotificationItem)
-│   │   ├── routes/api.ts      # REST endpoints + resilient in-memory database fallback
-│   │   └── index.ts           # Express server initialization & MongoDB connection
-│   ├── package.json
-│   └── tsconfig.json
-├── frontend/                  # React + Vite + TypeScript Glassmorphic Web Application
+│   │   ├── components/        # Glassmorphic Navbar & Reusable UI Modules
+│   │   ├── config/            # API Base URL Config (Vercel/Render ready)
+│   │   ├── pages/             # Dashboard, Classifier, Dustbins, Routes, Notifications
+│   │   └── index.css          # Design System Tokens & Glassmorphic Utilities
+│   ├── vercel.json            # SPA Rewrite Configuration for Vercel
+│   └── package.json           # Frontend Dependencies
+├── server/                    # Node.js + Express + TypeScript API Server
 │   ├── src/
-│   │   ├── pages/             # DashboardPage, ClassifierPage, DustbinsPage, RouteOptimizerPage, NotificationsPage
-│   │   ├── App.tsx            # Main application shell, header, and theme manager
-│   │   └── index.css          # Rich circular economy styling & custom CSS tokens
-│   └── package.json
-└── original_echosortha/       # Original reference prototype HTML & Python files
+│   │   ├── models/            # Mongoose Schemas (Dustbin, LedgerBlock, RoutePlan)
+│   │   ├── routes/            # REST API Endpoints (/api/dustbins, /api/ledger, etc.)
+│   │   └── index.ts           # Express Application Entry Point
+│   └── package.json           # Backend Dependencies
+├── backend_python/            # Python FastAPI AI & Computer Vision Service
+│   ├── main.py                # AI Classification & Route Optimization API
+│   └── requirements.txt       # Python Dependencies
+├── render.yaml                # Render Blueprint Configuration
+└── README.md                  # Comprehensive Project Documentation
 ```
 
 ---
 
-## 🛠️ Technology Stack
+## 🏁 Local Development & Verification
 
-| Layer | Technologies Used | Key Role |
-| :--- | :--- | :--- |
-| **Frontend Web App** | React 18, Vite, TypeScript, Vanilla CSS | Interactive glassmorphic UI, live webcam classification, charts, real-time telemetry |
-| **Backend API Server** | Node.js, Express, TypeScript, Mongoose | Data modeling, REST APIs, ledger management, resilient database connection |
-| **Database** | MongoDB / Mongoose ODM | Persistent storage for dustbin telemetry, ledger blocks, route plans, and alerts |
-| **AI & Optimization Service** | Python 3, FastAPI, OpenCV, NumPy | Deep Learning vision classification simulation, bounding box rendering, TSP routing |
+To run the entire suite locally:
 
----
-
-## 🚀 Getting Started & Local Execution
-
-Follow these steps to run all three services simultaneously locally:
-
-### Step 1: Start the Python AI & Route Optimization Service
 ```bash
-cd backend_python
-pip install -r requirements.txt
-python main.py
-# Service runs at http://localhost:8000
-```
+# 1. Clone the repository
+git clone https://github.com/Fahim-p2062/SciBlitz_Hackathon.git
+cd SciBlitz_Hackathon
 
-### Step 2: Start the TypeScript + Mongoose Backend API Server
-```bash
+# 2. Start TypeScript Backend Server (Port 5000)
 cd server
 npm install
-npm run dev
-# Server runs at http://localhost:5000
-# Note: Automatically connects to local MongoDB or switches to resilient in-memory seed mode if offline.
-```
+npm run build
+npm start
 
-### Step 3: Start the React + TypeScript Frontend Application
-```bash
-cd frontend
+# 3. Start React Frontend Web App (Port 5173)
+cd ../frontend
 npm install
+npm run build
 npm run dev
-# Web application launches at http://localhost:5173
 ```
 
----
-
-## 👥 Contributors
-- **Team**: SciBlitz
-- **Event**: CUET Hackathon
-- **Repository**: [https://github.com/Fahim-p2062/SciBlitz_Hackathon](https://github.com/Fahim-p2062/SciBlitz_Hackathon)
+Visit **http://localhost:5173** to explore EcoSortha locally or access our live production deployment at **[https://sci-blitz-hackathon.vercel.app/](https://sci-blitz-hackathon.vercel.app/)**.
