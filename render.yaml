@@ -1,0 +1,23 @@
+services:
+  # 1. TypeScript + Mongoose Backend Server
+  - type: web
+    name: ecosortha-backend
+    env: node
+    rootDir: server
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: MONGO_URI
+        value: mongodb://127.0.0.1:27017/ecosortha # Replace with MongoDB Atlas cluster URI in Render Dashboard
+
+  # 2. Python AI / Computer Vision Microservice (Optional / Standalone)
+  - type: web
+    name: ecosortha-ai-engine
+    env: python
+    rootDir: backend_python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
