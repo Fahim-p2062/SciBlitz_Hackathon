@@ -18,7 +18,7 @@ export const ClassifierPage: React.FC = () => {
   const [recycleCount, setRecycleCount] = useState(23);
   const [detections, setDetections] = useState<BoundingBox[]>([]);
   const [summaryMessage, setSummaryMessage] = useState('AI Vision active: detecting multi-class waste items...');
-  const [mode, setMode] = useState<'simulated_camera' | 'upload'>('simulated_camera');
+  const [mode] = useState<'simulated_camera' | 'upload'>('simulated_camera');
   const [hasWebcamPermission, setHasWebcamPermission] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
