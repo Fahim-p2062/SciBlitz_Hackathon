@@ -1,0 +1,251 @@
+import { Router, Request, Response } from 'express';
+import { Dustbin } from '../models/Dustbin';
+import { LedgerBlock } from '../models/LedgerBlock';
+import { NotificationItem } from '../models/NotificationItem';
+import { RoutePlan } from '../models/RoutePlan';
+
+export const apiRouter = Router();
+
+// Resilient In-Memory Fallback seed data in case local MongoDB is offline
+let memoryDustbins = [
+  {
+    binId: 'BIN-DHK-001',
+    name: 'Gulshan-2 Circle Bin A',
+    zone: 'Dhaka North City Corp',
+    location: { lat: 23.7925, lng: 90.4078, address: 'Gulshan Avenue, Dhaka' },
+    fillLevel: 88,
+    temperature: 31,
+    battery: 92,
+    status: 'CRITICAL',
+    lastEmptiedAt: new Date(Date.now() - 36 * 3600 * 1000)
+  },
+  {
+    binId: 'BIN-DHK-002',
+    name: 'Banani Road 11 Bin B',
+    zone: 'Dhaka North City Corp',
+    location: { lat: 23.7937, lng: 90.4066, address: 'Road 11, Banani' },
+    fillLevel: 74,
+    temperature: 29,
+    battery: 87,
+    status: 'WARNING',
+    lastEmptiedAt: new Date(Date.now() - 18 * 3600 * 1000)
+  },
+  {
+    binId: 'BIN-DHK-003',
+    name: 'Dhanmondi Lake Park Bin',
+    zone: 'Dhaka South City Corp',
+    location: { lat: 23.7461, lng: 90.3742, address: 'Dhanmondi Lake, Dhaka' },
+    fillLevel: 42,
+    temperature: 28,
+    battery: 96,
+    status: 'NORMAL',
+    lastEmptiedAt: new Date(Date.now() - 6 * 3600 * 1000)
+  },
+  {
+    binId: 'BIN-CTG-001',
+    name: 'Agrabad Commercial Bin',
+    zone: 'Chittagong City Corp',
+    location: { lat: 22.3236, lng: 91.8123, address: 'Agrabad C/A, Chittagong' },
+    fillLevel: 91,
+    temperature: 32,
+    battery: 81,
+    status: 'CRITICAL',
+    lastEmptiedAt: new Date(Date.now() - 42 * 3600 * 1000)
+  },
+  {
+    binId: 'BIN-CUET-001',
+    name: 'CUET Academic Hall Bin',
+    zone: 'CUET Campus',
+    location: { lat: 22.4633, lng: 91.9782, address: 'CUET Academic Bldg, Raozan' },
+    fillLevel: 65,
+    temperature: 27,
+    battery: 95,
+    status: 'NORMAL',
+    lastEmptiedAt: new Date(Date.now() - 12 * 3600 * 1000)
+  },
+  {
+    binId: 'BIN-CUET-002',
+    name: 'CUET Shaheed Minar Square',
+    zone: 'CUET Campus',
+    location: { lat: 22.4640, lng: 91.9790, address: 'Shaheed Minar Square, CUET' },
+    fillLevel: 82,
+    temperature: 28,
+    battery: 89,
+    status: 'WARNING',
+    lastEmptiedAt: new Date(Date.now() - 24 * 3600 * 1000)
+  }
+];
+
+let memoryLedger = [
+  {
+    blockIndex: 1,
+    hash: '0x8f3c4d29a1b0c7e6f8d392014b2a8f9c3e41d25b6a7c8e9f0d1e2f3a4b5c6d7e',
+    previousHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+    validatorNode: 'EcoSortha-Validator-DHK01',
+    timestamp: new Date(Date.now() - 7200 * 1000),
+    transactions: [
+      {
+        txId: 'TX-CIRC-9901',
+        sourceZone: 'Dhaka North City Corp',
+        wasteType: 'RECYCLE',
+        weightKg: 420.5,
+        collectorId: 'TRUCK-DHK-44',
+        verificationStatus: 'VERIFIED',
+        timestamp: new Date(Date.now() - 7150 * 1000)
+      },
+      {
+        txId: 'TX-CIRC-9902',
+        sourceZone: 'CUET Campus',
+        wasteType: 'COMPOST',
+        weightKg: 185.0,
+        collectorId: 'GREEN-CART-02',
+        verificationStatus: 'VERIFIED',
+        timestamp: new Date(Date.now() - 7100 * 1000)
+      }
+    ]
+  },
+  {
+    blockIndex: 2,
+    hash: '0x4b7c1f8a9e2d3c4b5a6f7e8d9c0b1a2f3e4d5c6b7a8f9e0d1c2b3a4f5e6d7c8b',
+    previousHash: '0x8f3c4d29a1b0c7e6f8d392014b2a8f9c3e41d25b6a7c8e9f0d1e2f3a4b5c6d7e',
+    validatorNode: 'EcoSortha-Validator-CTG02',
+    timestamp: new Date(Date.now() - 3600 * 1000),
+    transactions: [
+      {
+        txId: 'TX-CIRC-9903',
+        sourceZone: 'Chittagong City Corp',
+        wasteType: 'RECYCLE',
+        weightKg: 640.0,
+        collectorId: 'TRUCK-CTG-12',
+        verificationStatus: 'VERIFIED',
+        timestamp: new Date(Date.now() - 3500 * 1000)
+      }
+    ]
+  }
+];
+
+let memoryNotifications = [
+  {
+    notifId: 'NOTIF-101',
+    title: 'Critical Overflow Alert',
+    message: 'Gulshan-2 Circle Bin A (BIN-DHK-001) has reached 88% capacity. Immediate collection recommended.',
+    category: 'OVERFLOW_ALERT',
+    severity: 'CRITICAL',
+    zone: 'Dhaka North City Corp',
+    read: false,
+    createdAt: new Date(Date.now() - 1800 * 1000)
+  },
+  {
+    notifId: 'NOTIF-102',
+    title: 'Blockchain Verification Passed',
+    message: 'Block #2 verified on EcoSortha Circular Ledger recording 640kg recycled material from Chittagong.',
+    category: 'COMPLIANCE',
+    severity: 'INFO',
+    zone: 'Chittagong City Corp',
+    read: false,
+    createdAt: new Date(Date.now() - 3600 * 1000)
+  },
+  {
+    notifId: 'NOTIF-103',
+    title: 'CUET Hackathon Compliance Milestone',
+    message: 'CUET Campus zone achieved 85% segregation efficiency between Compost and Recyclable bins.',
+    category: 'COMPLIANCE',
+    severity: 'INFO',
+    zone: 'CUET Campus',
+    read: true,
+    createdAt: new Date(Date.now() - 12000 * 1000)
+  }
+];
+
+// GET /api/stats
+apiRouter.get('/stats', async (req: Request, res: Response) => {
+  try {
+    res.json({
+      totalRecycledKg: 1245.5,
+      co2OffsetTons: 3.84,
+      verifiedLedgerBlocks: memoryLedger.length,
+      activeDustbins: memoryDustbins.length,
+      criticalAlerts: memoryDustbins.filter(d => d.fillLevel >= 85).length,
+      circularEfficiency: 89.4
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to load stats' });
+  }
+});
+
+// GET /api/dustbins
+apiRouter.get('/dustbins', async (req: Request, res: Response) => {
+  try {
+    const { zone } = req.query;
+    let list = [...memoryDustbins];
+    if (zone && zone !== 'ALL') {
+      list = list.filter(b => b.zone === zone);
+    }
+    res.json(list);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch dustbins' });
+  }
+});
+
+// POST /api/dustbins/:binId/empty
+apiRouter.post('/dustbins/:binId/empty', async (req: Request, res: Response) => {
+  const { binId } = req.params;
+  const bin = memoryDustbins.find(b => b.binId === binId);
+  if (!bin) {
+    return res.status(404).json({ error: 'Dustbin not found' });
+  }
+  bin.fillLevel = 5;
+  bin.status = 'NORMAL';
+  bin.lastEmptiedAt = new Date();
+  res.json({ message: 'Dustbin collection scheduled/emptied successfully', dustbin: bin });
+});
+
+// GET /api/ledger
+apiRouter.get('/ledger', async (req: Request, res: Response) => {
+  res.json(memoryLedger);
+});
+
+// POST /api/ledger/block
+apiRouter.post('/ledger/block', async (req: Request, res: Response) => {
+  const { sourceZone, wasteType, weightKg, collectorId } = req.body;
+  const newIndex = memoryLedger.length + 1;
+  const prevHash = memoryLedger[memoryLedger.length - 1]?.hash || '0x0000000000000000';
+  const newHash = '0x' + Math.random().toString(16).substring(2, 18) + Math.random().toString(16).substring(2, 18);
+
+  const newBlock = {
+    blockIndex: newIndex,
+    hash: newHash,
+    previousHash: prevHash,
+    validatorNode: `EcoSortha-Validator-${sourceZone.substring(0, 3).toUpperCase()}`,
+    timestamp: new Date(),
+    transactions: [
+      {
+        txId: `TX-CIRC-${Math.floor(1000 + Math.random() * 9000)}`,
+        sourceZone: sourceZone || 'Dhaka North City Corp',
+        wasteType: wasteType || 'RECYCLE',
+        weightKg: Number(weightKg) || 250.0,
+        collectorId: collectorId || 'AI-COLLECTOR-01',
+        verificationStatus: 'VERIFIED',
+        timestamp: new Date()
+      }
+    ]
+  };
+
+  memoryLedger.push(newBlock);
+  res.json(newBlock);
+});
+
+// GET /api/notifications
+apiRouter.get('/notifications', async (req: Request, res: Response) => {
+  res.json(memoryNotifications);
+});
+
+// POST /api/notifications/:id/read
+apiRouter.post('/notifications/:id/read', async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const item = memoryNotifications.find(n => n.notifId === id);
+  if (item) {
+    item.read = true;
+  }
+  res.json({ success: true, notification: item });
+});

@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Waste Route Optimizer (Map + Budget)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0fdf4;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: #d1d5db;
+            outline: none;
+            opacity: 0.7;
+            transition: opacity .2s;
+        }
+        input[type="range"]:hover { opacity: 1; }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #10b981;
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #10b981;
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        #map-canvas {
+            width: 100%;
+            height: 500px;
+            background: linear-gradient(135deg, #4b5563 0%, #1f2937 100%);
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid #374151;
+        }
+        .location-node {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 10px;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.3s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+        }
+        .location-node:hover {
+            transform: scale(1.2) translate(-40%, -40%);
+        }
+        .location-label {
+            position: absolute;
+            font-size: 11px;
+            font-weight: 600;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+            pointer-events: none;
+        }
+        .truck {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            transition: all 0.8s ease-in-out;
+            z-index: 100;
+        }
+        .route-line {
+            position: absolute;
+            height: 4px;
+            background: linear-gradient(90deg, #fbbf24, #f59e0b);
+            transform-origin: left center;
+            opacity: 0.8;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+        .road-line {
+            position: absolute;
+            height: 2px;
+            background: #6b7280;
+            transform-origin: left center;
+            opacity: 0.3;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8">
+    <div class="max-w-7xl mx-auto">
+
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800">Smart Waste Route Optimizer</h1>
+            <p class="text-lg text-gray-600 mt-1">Budget-Aware Priority Collection (Base: Mirpur)</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white p-5 rounded-lg shadow-md flex items-center space-x-4 border border-gray-200">
+                <div class="p-3 rounded-full bg-green-100 text-green-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                </div>
+                <div>
+                    <div class="text-sm text-gray-500">Active Zones</div>
+                    <div id="active-zones" class="text-2xl font-semibold text-gray-800">8 / 8</div>
+                </div>
+            </div>
+            <div class="bg-white p-5 rounded-lg shadow-md flex items-center space-x-4 border border-gray-200">
+                <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
+                </div>
+                <div>
+                    <div class="text-sm text-gray-500">Need Attention</div>
+                    <div id="need-attention" class="text-2xl font-semibold text-gray-800">0</div>
+                </div>
+            </div>
+            <div class="bg-white p-5 rounded-lg shadow-md flex items-center space-x-4 border border-gray-200">
+                <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </div>
+                <div>
+                    <div class="text-sm text-gray-500">Current Day</div>
+                    <div id="current-day" class="text-2xl font-semibold text-gray-800">Day 1</div>
+                </div>
+            </div>
+            <div class="bg-white p-5 rounded-lg shadow-md flex items-center space-x-4 border border-gray-200">
+                <div class="p-3 rounded-full bg-purple-100 text-purple-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                </div>
+                <div>
+                    <div class="text-sm text-gray-500">Budget Left</div>
+                    <div id="budget-left" class="text-2xl font-semibold text-gray-800">৳ 0</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-lg border border-gray-200 mb-8">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-semibold text-gray-800">Route Map Visualization</h2>
+                <button id="animate-btn" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    🚛 Animate Route
+                </button>
+            </div>
+            <div id="map-canvas">
+                </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-lg border border-gray-200">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-6">Waste Zone Simulation</h2>
+                
+                <div class="bg-gray-800 text-white p-4 rounded-lg shadow-md flex items-center justify-between mb-4">
+                    <div class="flex items-center space-x-3">
+                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                        <span class="text-lg font-medium">Mirpur (Base)</span>
+                    </div>
+                    <span class="text-sm font-mono bg-blue-500 px-2 py-0.5 rounded">BASE</span>
+                </div>
+                <div id="zones-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-lg border border-gray-200">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-6">Route Optimization</h2>
+                
+                <div class="space-y-4 mb-4">
+                    <div>
+                        <label for="budget" class="block text-sm font-medium text-gray-700 mb-1">Daily Budget (৳)</label>
+                        <input type="number" id="budget" value="5000" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
+                    </div>
+                    <div>
+                        <label for="threshold" class="block text-sm font-medium text-gray-700 mb-1">Min Fill % to Consider</label>
+                        <input type="number" id="threshold" value="50" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
+                    </div>
+                    <div>
+                        <label for="fuel-efficiency" class="block text-sm font-medium text-gray-700 mb-1">Fuel Efficiency (km/L)</label>
+                        <input type="number" id="fuel-efficiency" value="4" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
+                    </div>
+                </div>
+                
+                <button id="calculate-route-btn" class="w-full bg-green-600 text-white font-bold py-3 px-4 rounded-lg shadow-md hover:bg-green-700 transition duration-300 ease-in-out flex items-center justify-center space-x-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                    <span>Calculate Optimal Route</span>
+                </button>
+                
+                <hr class="my-6 border-gray-200">
+                <div>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Trip Summary:</h3>
+                    
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                            <span class="font-medium text-gray-700">Total Distance:</span>
+                            <span id="total-distance-output" class="font-bold text-lg text-blue-600">0.0 km</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                            <span class="font-medium text-gray-700">Total Time:</span>
+                            <span id="total-time-output" class="font-bold text-lg text-purple-600">0 min</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-green-50 p-3 rounded-lg border border-green-200">
+                            <span class="font-medium text-green-800">Est. Fuel Cost:</span>
+                            <span id="fuel-cost-output" class="font-bold text-lg text-green-700">৳ 0.00</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-orange-50 p-3 rounded-lg border border-orange-200">
+                            <span class="font-medium text-orange-800">Zones Collected:</span>
+                            <span id="zones-collected" class="font-bold text-lg text-orange-700">0</span>
+                        </div>
+                    </div>
+
+                    <h3 class="text-xl font-semibold text-gray-800 mt-6 mb-2">Collection Route:</h3>
+                    <div id="route-output" class="space-y-2 text-gray-700 font-mono text-sm bg-gray-50 p-4 rounded-md border border-gray-200 overflow-y-auto h-64">
+                        <p class="text-gray-500">Click the button to calculate the route...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Persist zone slider state
+        const ZONE_STATE_KEY = 'ECO_ZONE_STATE_v1';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // --- 1. CONFIG & DATA ---
+            const BASE_LOCATION = 'Mirpur';
+            const FUEL_PRICE_PER_LITRE = 122;
+            const locations = [
+                'Mirpur', 'Uttara', 'Badda', 'Gulshan', 'Banani', 
+                'Keraniganj', 'Narayanganj', 'Mohammadpur', 'Depot'
+            ];
+            
+            const nodePositions = {
+                'Mirpur': { x: 20, y: 50 },
+                'Uttara': { x: 35, y: 15 },
+                'Badda': { x: 65, y: 30 },
+                'Gulshan': { x: 55, y: 40 },
+                'Banani': { x: 45, y: 35 },
+                'Depot': { x: 50, y: 60 },
+                'Mohammadpur': { x: 30, y: 70 },
+                'Keraniganj': { x: 40, y: 85 },
+                'Narayanganj': { x: 80, y: 70 }
+            };
+
+            const graph = {
+                'Mirpur': {
+                    'Uttara':      { distance: 12, time: 35 },
+                    'Mohammadpur': { distance: 7,  time: 20 },
+                    'Banani':      { distance: 9,  time: 25 },
+                    'Depot':       { distance: 10, time: 30 }
+                },
+                'Uttara': {
+                    'Mirpur':  { distance: 12, time: 35 },
+                    'Banani':  { distance: 10, time: 30 },
+                    'Gulshan': { distance: 9,  time: 25 },
+                    'Badda':   { distance: 10, time: 30 }
+                },
+                'Badda': {
+                    'Depot':       { distance: 10, time: 30 },
+                    'Gulshan':     { distance: 3,  time: 10 },
+                    'Uttara':      { distance: 10, time: 30 },
+                    'Narayanganj': { distance: 18, time: 50 }
+                },
+                'Gulshan': {
+                    'Banani': { distance: 2, time: 10 },
+                    'Badda':  { distance: 3, time: 10 },
+                    'Uttara': { distance: 9, time: 25 }
+                },
+                'Banani': {
+                    'Depot':       { distance: 6,  time: 15 },
+                    'Gulshan':     { distance: 2,  time: 10 },
+                    'Mirpur':      { distance: 9,  time: 25 },
+                    'Uttara':      { distance: 10, time: 30 },
+                    'Mohammadpur': { distance: 7,  time: 20 }
+                },
+                'Keraniganj': {
+                    'Mohammadpur': { distance: 9,  time: 25 },
+                    'Narayanganj': { distance: 15, time: 40 },
+                    'Depot':       { distance: 12, time: 35 }
+                },
+                'Narayanganj': {
+                    'Keraniganj': { distance: 15, time: 40 },
+                    'Badda':      { distance: 18, time: 50 },
+                    'Depot':      { distance: 20, time: 60 }
+                },
+                'Mohammadpur': {
+                    'Depot':      { distance: 8, time: 20 },
+                    'Mirpur':     { distance: 7, time: 20 },
+                    'Banani':     { distance: 7, time: 20 },
+                    'Keraniganj': { distance: 9, time: 25 }
+                },
+                'Depot': {
+                    'Mohammadpur': { distance: 8,  time: 20 },
+                    'Banani':      { distance: 6,  time: 15 },
+                    'Mirpur':      { distance: 10, time: 30 },
+                    'Badda':       { distance: 10, time: 30 },
+                    'Keraniganj':  { distance: 12, time: 35 }
+                }
+            };
+
+            const adjacencyList = new Map();
+            function addNode(node) {
+                if (!adjacencyList.has(node)) {
+                    adjacencyList.set(node, new Map());
+                }
+            }
+            function addEdge(node1, node2, weight) {
+                addNode(node1);
+                addNode(node2);
+                adjacencyList.get(node1).set(node2, weight);
+                adjacencyList.get(node2).set(node1, weight);
+            }
+            for (const node1 in graph) {
+                for (const node2 in graph[node1]) {
+                    addEdge(node1, node2, graph[node1][node2]);
+                }
+            }
+
+            class PriorityQueue {
+                constructor() { this.values = []; }
+                enqueue(node, priority) { this.values.push({ node, priority }); this.sort(); }
+                dequeue() { return this.values.shift(); }
+                sort() { this.values.sort((a, b) => a.priority - b.priority); }
+                isEmpty() { return this.values.length === 0; }
+            }
+
+            function dijkstra(startNode, endNode) {
+                const distances = new Map();
+                const previousNodes = new Map();
+                const pq = new PriorityQueue();
+                for (const node of adjacencyList.keys()) {
+                    distances.set(node, Infinity);
+                    previousNodes.set(node, null);
+                }
+                distances.set(startNode, 0);
+                pq.enqueue(startNode, 0);
+                while (!pq.isEmpty()) {
+                    const { node: currentNode } = pq.dequeue();
+                    if (currentNode === endNode) break;
+                    if (adjacencyList.has(currentNode)) {
+                        for (const [neighbor, weight] of adjacencyList.get(currentNode).entries()) {
+                            const newDistance = distances.get(currentNode) + weight.distance; 
+                            if (newDistance < distances.get(neighbor)) {
+                                distances.set(neighbor, newDistance);
+                                previousNodes.set(neighbor, currentNode);
+                                pq.enqueue(neighbor, newDistance);
+                            }
+                        }
+                    }
+                }
+                const path = [];
+                let current = endNode;
+                let totalTime = 0;
+                while (current !== null) {
+                    path.unshift(current);
+                    const prev = previousNodes.get(current);
+                    if (prev !== null) {
+                        const edgeWeight = adjacencyList.get(prev).get(current);
+                        if(edgeWeight) {
+                            totalTime += edgeWeight.time;
+                        }
+                    }
+                    current = prev;
+                }
+                if (path[0] === startNode) {
+                    return { path, distance: distances.get(endNode), time: totalTime };
+                } else {
+                    return { path: [], distance: Infinity, time: Infinity };
+                }
+            }
+            
+            const sleep = (ms) => new Promise(res => setTimeout(res, ms));
+
+            // --- DOM & STATE ---
+            const zonesContainer = document.getElementById('zones-container');
+            const needAttentionEl = document.getElementById('need-attention');
+            const calculateBtn = document.getElementById('calculate-route-btn');
+            const routeOutputEl = document.getElementById('route-output');
+            const distanceOutputEl = document.getElementById('total-distance-output');
+            const timeOutputEl = document.getElementById('total-time-output');
+            const fuelCostOutputEl = document.getElementById('fuel-cost-output');
+            const zonesCollectedEl = document.getElementById('zones-collected');
+            const currentDayEl = document.getElementById('current-day');
+            const budgetLeftEl = document.getElementById('budget-left');
+            const thresholdInput = document.getElementById('threshold');
+            const fuelEfficiencyInput = document.getElementById('fuel-efficiency');
+            const budgetInput = document.getElementById('budget');
+            const animateBtn = document.getElementById('animate-btn');
+            const mapCanvas = document.getElementById('map-canvas');
+            
+            const zoneInputs = new Map();
+            let currentDay = 1;
+            let carryOverBins = [];
+            let calculatedRoute = [];
+            let truck;
+
+            // ZONE STATE PERSIST
+            function loadZoneState() {
+                const raw = localStorage.getItem(ZONE_STATE_KEY);
+                if (!raw) {
+                    const defaults = {
+                        sliders: {
+                            'Gulshan':85,'Uttara':75,'Narayanganj':95,'Badda':60,'Banani':0,'Mohammadpur':0,'Keraniganj':0,'Depot':0
+                        },
+                        currentDay: 1
+                    };
+                    localStorage.setItem(ZONE_STATE_KEY, JSON.stringify(defaults));
+                    return defaults;
+                }
+                return safeParse(raw, {});
+            }
+            function saveZoneState(state) {
+                localStorage.setItem(ZONE_STATE_KEY, JSON.stringify(state));
+            }
+            function safeParse(str, fallback) {
+                try { return JSON.parse(str); } catch(e) { return fallback; }
+            }
+
+            // UI functions
+            function getStatus(percentage) {
+                if (percentage > 80) return { text: 'High', color: 'text-red-600', bg: 'bg-red-100' };
+                if (percentage > 50) return { text: 'Medium', color: 'text-yellow-600', bg: 'bg-yellow-100' };
+                return { text: 'Low', color: 'text-green-600', bg: 'bg-green-100' };
+            }
+
+            function updateStats() {
+                let attentionCount = 0;
+                for (const [zone, input] of zoneInputs.entries()) {
+                    if (parseInt(input.value, 10) > 80) {
+                        attentionCount++;
+                    }
+                }
+                needAttentionEl.textContent = `${attentionCount}`;
+            }
+
+            function createZoneCard(zoneName) {
+                const card = document.createElement('div');
+                card.className = 'p-4 rounded-lg shadow-md border border-gray-200 bg-white';
+                const status = getStatus(0);
+                card.innerHTML = `
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-semibold text-lg text-gray-800">${zoneName}</span>
+                        <span id="status-text-${zoneName}" class="text-sm font-medium px-2 py-0.5 rounded ${status.color} ${status.bg}">${status.text}</span>
+                    </div>
+                    <label class="block text-sm font-medium text-gray-700">Fill: <span id="percent-label-${zoneName}" class="font-bold">0%</span></label>
+                    <input type="range" id="slider-${zoneName}" name="${zoneName}" min="0" max="100" value="0" class="mt-2 w-full">
+                `;
+                zonesContainer.appendChild(card);
+                
+                const slider = document.getElementById(`slider-${zoneName}`);
+                const percentLabel = document.getElementById(`percent-label-${zoneName}`);
+                const statusText = document.getElementById(`status-text-${zoneName}`);
+                
+                slider.addEventListener('input', (e) => {
+                    const value = e.target.value;
+                    percentLabel.textContent = `${value}%`;
+                    const newStatus = getStatus(value);
+                    statusText.textContent = newStatus.text;
+                    statusText.className = `text-sm font-medium px-2 py-0.5 rounded ${newStatus.color} ${newStatus.bg}`;
+                    updateStats();
+                    drawMap();
+                    // persist slider state
+                    const state = loadZoneState();
+                    state.sliders = state.sliders || {};
+                    state.sliders[zoneName] = parseInt(value, 10);
+                    saveZoneState(state);
+                });
+                zoneInputs.set(zoneName, slider);
+            }
+
+            function formatTime(totalMinutes) {
+                if (totalMinutes < 60) return `${Math.round(totalMinutes)} min`;
+                const hours = Math.floor(totalMinutes / 60);
+                const minutes = Math.round(totalMinutes % 60);
+                return `${hours} hr ${minutes} min`;
+            }
+
+            function drawMap() {
+                mapCanvas.innerHTML = '';
+                
+                for (const [node1, neighbors] of adjacencyList.entries()) {
+                    for (const [node2, weight] of neighbors.entries()) {
+                        if (node1 < node2) {
+                            const pos1 = nodePositions[node1];
+                            const pos2 = nodePositions[node2];
+                            
+                            const x1 = (pos1.x / 100) * mapCanvas.offsetWidth;
+                            const y1 = (pos1.y / 100) * mapCanvas.offsetHeight;
+                            const x2 = (pos2.x / 100) * mapCanvas.offsetWidth;
+                            const y2 = (pos2.y / 100) * mapCanvas.offsetHeight;
+                            
+                            const length = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+                            const angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
+                            
+                            const line = document.createElement('div');
+                            line.className = 'road-line';
+                            line.style.width = `${length}px`;
+                            line.style.left = `${x1}px`;
+                            line.style.top = `${y1}px`;
+                            line.style.transform = `rotate(${angle}deg)`;
+                            mapCanvas.appendChild(line);
+                        }
+                    }
+                }
+                
+                locations.forEach(location => {
+                    const pos = nodePositions[location];
+                    const node = document.createElement('div');
+                    node.className = 'location-node';
+                    
+                    if (location === BASE_LOCATION) {
+                        node.style.background = '#1e40af';
+                    } else {
+                        const fillLevel = parseInt(zoneInputs.get(location)?.value || 0, 10);
+                        if (fillLevel > 80) node.style.background = '#dc2626';
+                        else if (fillLevel > 50) node.style.background = '#f59e0b';
+                        else node.style.background = '#10b981';
+                    }
+                    
+                    node.style.left = `${pos.x}%`;
+                    node.style.top = `${pos.y}%`;
+                    node.style.transform = 'translate(-50%, -50%)';
+                    node.textContent = location.substring(0, 3).toUpperCase();
+                    
+                    const label = document.createElement('div');
+                    label.className = 'location-label';
+                    label.textContent = location;
+                    label.style.left = `${pos.x}%`;
+                    label.style.top = `${pos.y}%`;
+                    label.style.marginTop = '25px';
+                    label.style.transform = 'translate(-50%, 0)';
+                    
+                    mapCanvas.appendChild(node);
+                    mapCanvas.appendChild(label);
+                });
+
+                truck = document.createElement('div');
+                truck.className = 'truck';
+                truck.textContent = '🚚';
+                const basePos = nodePositions[BASE_LOCATION];
+                truck.style.left = `${basePos.x}%`;
+                truck.style.top = `${basePos.y}%`;
+                truck.style.transform = 'translate(-50%, -50%)';
+                mapCanvas.appendChild(truck);
+            }
+
+            async function animateRoute() {
+                animateBtn.disabled = true;
+                calculateBtn.disabled = true;
+
+                drawMap();
+
+                for (const segment of calculatedRoute) {
+                    const path = segment.path;
+                    for (let i = 0; i < path.length - 1; i++) {
+                        const fromNode = path[i];
+                        const toNode = path[i+1];
+
+                        const pos1 = nodePositions[fromNode];
+                        const pos2 = nodePositions[toNode];
+                        
+                        const x1 = (pos1.x / 100) * mapCanvas.offsetWidth;
+                        const y1 = (pos1.y / 100) * mapCanvas.offsetHeight;
+                        const x2 = (pos2.x / 100) * mapCanvas.offsetWidth;
+                        const y2 = (pos2.y / 100) * mapCanvas.offsetHeight;
+                        
+                        const length = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+                        const angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
+                        
+                        const line = document.createElement('div');
+                        line.className = 'route-line';
+                        line.style.width = `${length}px`;
+                        line.style.left = `${x1}px`;
+                        line.style.top = `${y1}px`;
+                        line.style.transform = `rotate(${angle}deg)`;
+                        mapCanvas.appendChild(line);
+                        
+                        truck.style.left = `${pos2.x}%`;
+                        truck.style.top = `${pos2.y}%`;
+                        
+                        await sleep(800);
+                    }
+                }
+
+                animateBtn.disabled = false;
+                calculateBtn.disabled = false;
+            }
+
+            function calculateOptimalRoute() {
+                const dailyBudget = parseFloat(budgetInput.value);
+                const threshold = parseInt(thresholdInput.value, 10);
+                const fuelEfficiency = parseFloat(fuelEfficiencyInput.value) || 1;
+                
+                let totalDistance = 0;
+                let totalTime = 0;
+                let totalCost = 0;
+                let zonesCollectedCount = 0;
+                let currentLocation = BASE_LOCATION;
+                const routeLog = [`<div class="font-bold">Day ${currentDay} - Budget: ৳${dailyBudget.toFixed(2)}</div>`];
+                const collectedBins = [];
+                calculatedRoute = [];
+
+                let binsToVisit = [];
+                for (const [zone, input] of zoneInputs.entries()) {
+                    const fillLevel = parseInt(input.value, 10);
+                    if (fillLevel >= threshold) {
+                        const isCarryOver = carryOverBins.some(b => b.name === zone);
+                        const priorityBonus = isCarryOver ? 10000 : 0;
+                        binsToVisit.push({ name: zone, priority: fillLevel + priorityBonus });
+                        if (isCarryOver) routeLog.push(`<div class="text-yellow-600">Prioritizing ${zone} from yesterday.</div>`);
+                    }
+                }
+
+                while (binsToVisit.length > 0) {
+                    let bestTarget = null;
+                    let bestScore = -Infinity;
+                    let bestPathInfo = null;
+
+                    for (const bin of binsToVisit) {
+                        const { distance, time } = dijkstra(currentLocation, bin.name);
+                        if (distance === Infinity) continue;
+                        
+                        const score = bin.priority / (distance + time + 1);
+                        if (score > bestScore) {
+                            bestScore = score;
+                            bestTarget = bin;
+                            bestPathInfo = dijkstra(currentLocation, bin.name);
+                        }
+                    }
+
+                    if (bestTarget === null) {
+                        routeLog.push(`<div class="text-red-600">No reachable bins left.</div>`);
+                        break;
+                    }
+
+                    const returnPathInfo = dijkstra(bestTarget.name, BASE_LOCATION);
+                    const costToVisit = (bestPathInfo.distance / fuelEfficiency) * FUEL_PRICE_PER_LITRE;
+                    const costToReturn = (returnPathInfo.distance / fuelEfficiency) * FUEL_PRICE_PER_LITRE;
+
+                    if (totalCost + costToVisit + costToReturn > dailyBudget) {
+                        routeLog.push(`<div class="font-bold text-red-600">BUDGET LIMIT:</div>`);
+                        routeLog.push(`&nbsp;&nbsp;Cannot visit ${bestTarget.name}.`);
+                        routeLog.push(`&nbsp;&nbsp;Cost (৳${(costToVisit + costToReturn).toFixed(2)}) exceeds remaining budget.`);
+                        break;
+                    }
+
+                    totalDistance += bestPathInfo.distance;
+                    totalTime += bestPathInfo.time;
+                    totalCost += costToVisit;
+                    currentLocation = bestTarget.name;
+                    zonesCollectedCount++;
+                    collectedBins.push(bestTarget.name);
+                    calculatedRoute.push(bestPathInfo);
+
+                    routeLog.push(`<hr class="my-1 border-gray-300">`);
+                    routeLog.push(`<strong>${zonesCollectedCount}. Travel to ${bestTarget.name}</strong> (${bestTarget.priority % 100}%)`);
+                    routeLog.push(`&nbsp;&nbsp;Path: ${bestPathInfo.path.join(' &rarr; ')}`);
+                    routeLog.push(`&nbsp;&nbsp;Cost: <span class="text-green-700">৳${costToVisit.toFixed(2)}</span> | Dist: ${bestPathInfo.distance.toFixed(1)} km`);
+                    routeLog.push(`&nbsp;&nbsp;<strong>COLLECTED</strong> at <strong>${bestTarget.name}</strong>.`);
+                    
+                    binsToVisit = binsToVisit.filter(b => b.name !== bestTarget.name);
+                }
+
+                routeLog.push(`<hr class="my-1 border-gray-300">`);
+                routeLog.push(`<strong>Return to ${BASE_LOCATION}</strong>`);
+                if (currentLocation !== BASE_LOCATION) {
+                    const returnPathInfo = dijkstra(currentLocation, BASE_LOCATION);
+                    const returnCost = (returnPathInfo.distance / fuelEfficiency) * FUEL_PRICE_PER_LITRE;
+                    
+                    totalDistance += returnPathInfo.distance;
+                    totalTime += returnPathInfo.time;
+                    totalCost += returnCost;
+                    calculatedRoute.push(returnPathInfo);
+                    
+                    routeLog.push(`&nbsp;&nbsp;Path: ${returnPathInfo.path.join(' &rarr; ')}`);
+                    routeLog.push(`&nbsp;&nbsp;Cost: <span class="text-green-700">৳${returnCost.toFixed(2)}</span> | Dist: ${returnPathInfo.distance.toFixed(1)} km`);
+                } else {
+                    routeLog.push(`&nbsp;&nbsp;Already at base. No cost.`);
+                }
+
+                routeLog.push(`<hr class="my-1 border-gray-300">`);
+                routeLog.push(`<div class="font-bold">Day ${currentDay} Complete.</div>`);
+
+                carryOverBins = binsToVisit;
+                if (carryOverBins.length > 0) {
+                    routeLog.push(`<div class="font-bold text-yellow-600">${carryOverBins.length} bins not collected.</div>`);
+                    currentDay++;
+                } else {
+                    routeLog.push(`<div class="font-bold text-green-600">All bins collected!</div>`);
+                    currentDay = 1;
+                }
+                
+                collectedBins.forEach(zoneName => {
+                    const slider = zoneInputs.get(zoneName);
+                    slider.value = 0;
+                    slider.dispatchEvent(new Event('input'));
+                });
+
+                distanceOutputEl.textContent = `${totalDistance.toFixed(1)} km`;
+                timeOutputEl.textContent = formatTime(totalTime);
+                fuelCostOutputEl.textContent = `৳ ${totalCost.toFixed(2)}`;
+                zonesCollectedEl.textContent = `${zonesCollectedCount}`;
+                routeOutputEl.innerHTML = routeLog.join('<br>');
+                currentDayEl.textContent = `Day ${currentDay}`;
+                budgetLeftEl.textContent = `৳ ${(dailyBudget - totalCost).toFixed(2)}`;
+                
+                drawMap();
+                animateBtn.disabled = false;
+
+                // Save day and sliders to storage
+                const state = loadZoneState();
+                state.currentDay = currentDay;
+                saveZoneState(state);
+            }
+
+            function initialize() {
+                locations.filter(loc => loc !== BASE_LOCATION).forEach(zone => {
+                    createZoneCard(zone);
+                });
+                document.getElementById('active-zones').textContent = `${zoneInputs.size} / ${zoneInputs.size}`;
+
+                const state = loadZoneState();
+                if (state && state.sliders) {
+                    for (const [k, v] of Object.entries(state.sliders)) {
+                        const slider = zoneInputs.get(k);
+                        if (slider) {
+                            slider.value = v;
+                            slider.dispatchEvent(new Event('input'));
+                        }
+                    }
+                }
+
+                updateStats();
+                drawMap();
+                
+                calculateBtn.addEventListener('click', calculateOptimalRoute);
+                animateBtn.addEventListener('click', animateRoute);
+                window.addEventListener('resize', drawMap);
+
+                // persist sliders on storage changes (allow multi-tab sync)
+                window.addEventListener('storage', (e) => {
+                    if (e.key === ZONE_STATE_KEY) {
+                        const newState = safeParse(localStorage.getItem(ZONE_STATE_KEY), null);
+                        if (newState && newState.sliders) {
+                            for (const [k, v] of Object.entries(newState.sliders)) {
+                                const slider = zoneInputs.get(k);
+                                if (slider && slider.value != v) {
+                                    slider.value = v;
+                                    slider.dispatchEvent(new Event('input'));
+                                }
+                            }
+                            if (newState.currentDay) {
+                                currentDay = newState.currentDay;
+                                currentDayEl.textContent = `Day ${currentDay}`;
+                            }
+                        }
+                    }
+                });
+            }
+
+            initialize();
+        });
+    </script>
+</body>
+</html>
