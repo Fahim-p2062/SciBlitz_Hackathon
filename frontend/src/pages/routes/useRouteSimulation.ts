@@ -15,12 +15,13 @@ export function useRouteSimulation() {
   const co2SavedKg = Number((totalDistanceKm * 1.65).toFixed(1));
 
   const stops: RouteStop[] = [
-    { order: 1, id: 'BIN-CTG-001', name: 'Agrabad Commercial Bin', fill: 91, priority: 'CRITICAL', time: '08:15 AM', x: 12, y: 75, wasteKg: 140 },
-    { order: 2, id: 'BIN-DHK-001', name: 'Gulshan-2 Circle Bin A', fill: 88, priority: 'CRITICAL', time: '09:00 AM', x: 30, y: 28, wasteKg: 132 },
-    { order: 3, id: 'BIN-CUET-002', name: 'CUET Shaheed Minar Square', fill: 82, priority: 'WARNING', time: '10:30 AM', x: 50, y: 65, wasteKg: 110 },
-    { order: 4, id: 'BIN-DHK-002', name: 'Banani Road 11 Bin B', fill: 74, priority: 'WARNING', time: '11:45 AM', x: 68, y: 32, wasteKg: 95 },
-    { order: 5, id: 'BIN-CUET-001', name: 'CUET Academic Hall Bin', fill: 65, priority: 'NORMAL', time: '01:15 PM', x: 84, y: 78, wasteKg: 80 },
-    { order: 6, id: 'BIN-DHK-003', name: 'Dhanmondi Lake Park Bin', fill: 42, priority: 'NORMAL', time: '02:30 PM', x: 92, y: 25, wasteKg: 55 }
+    { order: 1, id: 'BIN-CUET-HW01', name: 'CUET Live Hardware IoT Dustbin (Firebase Demo)', fill: 100, priority: 'CRITICAL', time: '08:00 AM', x: 8, y: 68, wasteKg: 155 },
+    { order: 2, id: 'BIN-CTG-001', name: 'Agrabad Commercial Bin', fill: 91, priority: 'CRITICAL', time: '08:15 AM', x: 18, y: 75, wasteKg: 140 },
+    { order: 3, id: 'BIN-DHK-001', name: 'Gulshan-2 Circle Bin A', fill: 88, priority: 'CRITICAL', time: '09:00 AM', x: 35, y: 28, wasteKg: 132 },
+    { order: 4, id: 'BIN-CUET-002', name: 'CUET Shaheed Minar Square', fill: 82, priority: 'WARNING', time: '10:30 AM', x: 52, y: 65, wasteKg: 110 },
+    { order: 5, id: 'BIN-DHK-002', name: 'Banani Road 11 Bin B', fill: 74, priority: 'WARNING', time: '11:45 AM', x: 68, y: 32, wasteKg: 95 },
+    { order: 6, id: 'BIN-CUET-001', name: 'CUET Academic Hall Bin', fill: 65, priority: 'NORMAL', time: '01:15 PM', x: 84, y: 78, wasteKg: 80 },
+    { order: 7, id: 'BIN-DHK-003', name: 'Dhanmondi Lake Park Bin', fill: 42, priority: 'NORMAL', time: '02:30 PM', x: 92, y: 25, wasteKg: 55 }
   ];
 
   useEffect(() => {

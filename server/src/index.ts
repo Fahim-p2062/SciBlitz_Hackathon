@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import { apiRouter } from './routes/api';
+import { initFirebaseAdmin } from './services/firebase';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -105,6 +106,8 @@ app.get('/', (req, res) => {
 });
 
 async function startServer() {
+  initFirebaseAdmin();
+
   try {
     // SECURITY: Log only hostname, mask credentials
     const safeUri = MONGO_URI.replace(/\/\/([^:]+):([^@]+)@/, '//***:***@');

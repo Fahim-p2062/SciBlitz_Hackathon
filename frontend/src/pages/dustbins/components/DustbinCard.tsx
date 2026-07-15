@@ -25,7 +25,7 @@ export const DustbinCard: React.FC<DustbinCardProps> = ({ bin, handleEmptyBin })
           </div>
           <span className={`badge ${badgeClass}`}>
             {bin.fillLevel >= 85 ? <AlertTriangle size={14} /> : <CheckCircle2 size={14} />}
-            {bin.fillLevel}% FULL
+            {typeof bin.fillLevel === 'number' ? Number(bin.fillLevel).toFixed(1).replace(/\.0$/, '') : bin.fillLevel}% FULL
           </span>
         </div>
 
@@ -38,12 +38,12 @@ export const DustbinCard: React.FC<DustbinCardProps> = ({ bin, handleEmptyBin })
         <div style={{ marginBottom: '1.25rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', marginBottom: '0.35rem' }}>
             <span style={{ color: 'var(--text-muted)' }}>Fill Capacity</span>
-            <span style={{ fontWeight: 700, color: progressColor }}>{bin.fillLevel}%</span>
+            <span style={{ fontWeight: 700, color: progressColor }}>{typeof bin.fillLevel === 'number' ? Number(bin.fillLevel).toFixed(1).replace(/\.0$/, '') : bin.fillLevel}%</span>
           </div>
           <div className="progress-container">
             <div 
               className="progress-bar"
-              style={{ width: `${bin.fillLevel}%`, background: progressColor }}
+              style={{ width: `${Math.min(100, Math.max(0, bin.fillLevel))}%`, background: progressColor }}
             />
           </div>
         </div>

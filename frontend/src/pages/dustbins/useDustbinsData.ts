@@ -69,19 +69,60 @@ export function useDustbinsData() {
       battery: 89,
       status: 'WARNING',
       lastEmptiedAt: new Date(Date.now() - 24 * 3600 * 1000).toISOString()
+    },
+    {
+      binId: 'BIN-CUET-HW01',
+      name: 'CUET Live Hardware IoT Dustbin (Firebase Demo)',
+      zone: 'CUET Campus',
+      location: { lat: 22.4645, lng: 91.9795, address: 'Hardware IoT Prototype Lab, CUET' },
+      fillLevel: 100,
+      temperature: 30,
+      battery: 98,
+      status: 'CRITICAL',
+      lastEmptiedAt: new Date(Date.now() - 2 * 3600 * 1000).toISOString()
     }
   ]);
 
   const [selectedZone, setSelectedZone] = useState('ALL');
 
   useEffect(() => {
-    apiFetch<DustbinItem[]>('/api/dustbins')
-      .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
+    let isMounted = true;
+
+    const fetchAllData = async () => {
+      try {
+        const data = await apiFetch<DustbinItem[]>('/api/dustbins');
+        if (isMounted && Array.isArray(data) && data.length > 0) {
           setDustbins(data);
+          return;
         }
-      })
-      .catch(() => {});
+      } catch (err) {}
+
+      // Direct fallback / client-side live update from Firebase RTDB
+      try {
+        const fbRes = await fetch('https://smartdustbin-696a9-default-rtdb.asia-southeast1.firebasedatabase.app/binData.json?auth=OabTeHdFKGmnrK4w69lcNLhj64HzzjFtqFokCYHG');
+        if (fbRes.ok && isMounted) {
+          const fbData = await fbRes.json();
+          let liveFill = 0;
+          if (fbData?.bin1 && typeof fbData.bin1.fillPercent === 'number') {
+            liveFill = Math.round(Math.min(100, Math.max(0, fbData.bin1.fillPercent)) * 10) / 10;
+          } else if (fbData?.binData?.bin1 && typeof fbData.binData.bin1.fillPercent === 'number') {
+            liveFill = Math.round(Math.min(100, Math.max(0, fbData.binData.bin1.fillPercent)) * 10) / 10;
+          }
+          setDustbins(prev => prev.map(b => b.binId === 'BIN-CUET-HW01' ? {
+            ...b,
+            fillLevel: liveFill,
+            status: liveFill >= 85 ? 'CRITICAL' : (liveFill >= 70 ? 'WARNING' : 'NORMAL')
+          } : b));
+        }
+      } catch (fbErr) {}
+    };
+
+    fetchAllData();
+    const interval = setInterval(fetchAllData, 3000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, []);
 
   const handleEmptyBin = async (binId: string) => {
