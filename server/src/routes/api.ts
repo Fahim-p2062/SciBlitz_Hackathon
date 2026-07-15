@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import crypto from 'crypto';
 import { Dustbin } from '../models/Dustbin';
 import { LedgerBlock } from '../models/LedgerBlock';
 import { NotificationItem } from '../models/NotificationItem';
@@ -243,23 +244,41 @@ apiRouter.get('/ledger', async (req: Request, res: Response) => {
 // POST /api/ledger/block
 apiRouter.post('/ledger/block', async (req: Request, res: Response) => {
   const { sourceZone, wasteType, weightKg, collectorId } = req.body;
+
+  // SECURITY: Input validation — reject missing required fields
+  if (!sourceZone || typeof sourceZone !== 'string') {
+    return res.status(400).json({ error: 'Missing or invalid required field: sourceZone (string)' });
+  }
+  if (!wasteType || typeof wasteType !== 'string') {
+    return res.status(400).json({ error: 'Missing or invalid required field: wasteType (string)' });
+  }
+  const parsedWeight = Number(weightKg);
+  if (isNaN(parsedWeight) || parsedWeight <= 0 || parsedWeight > 100000) {
+    return res.status(400).json({ error: 'Invalid weightKg: must be a positive number up to 100,000' });
+  }
+
+  const sanitizedZone = String(sourceZone).trim().substring(0, 100);
+  const sanitizedWasteType = String(wasteType).trim().substring(0, 50);
+  const sanitizedCollector = collectorId ? String(collectorId).trim().substring(0, 50) : 'AI-COLLECTOR-01';
+
   const newIndex = memoryLedger.length + 1;
   const prevHash = memoryLedger[memoryLedger.length - 1]?.hash || '0x0000000000000000';
-  const newHash = '0x' + Math.random().toString(16).substring(2, 18) + Math.random().toString(16).substring(2, 18);
+  // SECURITY: Cryptographically secure hash using Node.js crypto
+  const newHash = '0x' + crypto.randomBytes(32).toString('hex');
 
   const newBlock = {
     blockIndex: newIndex,
     hash: newHash,
     previousHash: prevHash,
-    validatorNode: `EcoSortha-Validator-${sourceZone.substring(0, 3).toUpperCase()}`,
+    validatorNode: `EcoSortha-Validator-${sanitizedZone.substring(0, 3).toUpperCase()}`,
     timestamp: new Date(),
     transactions: [
       {
-        txId: `TX-CIRC-${Math.floor(1000 + Math.random() * 9000)}`,
-        sourceZone: sourceZone || 'Dhaka North City Corp',
-        wasteType: wasteType || 'RECYCLE',
-        weightKg: Number(weightKg) || 250.0,
-        collectorId: collectorId || 'AI-COLLECTOR-01',
+        txId: `TX-CIRC-${crypto.randomInt(1000, 9999)}`,
+        sourceZone: sanitizedZone,
+        wasteType: sanitizedWasteType,
+        weightKg: parsedWeight,
+        collectorId: sanitizedCollector,
         verificationStatus: 'VERIFIED',
         timestamp: new Date()
       }
@@ -271,10 +290,10 @@ apiRouter.post('/ledger/block', async (req: Request, res: Response) => {
   memoryNotifications.unshift({
     notifId: `NOTIF-${Date.now().toString().slice(-4)}`,
     title: `⚡ Blockchain Ledger Block #${newIndex} Minted`,
-    message: `Verified transaction of ${weightKg || 250}kg (${wasteType || 'RECYCLE'}) from ${sourceZone || 'Dhaka North City Corp'}. Block Hash: ${newHash.substring(0, 16)}...`,
+    message: `Verified transaction of ${parsedWeight}kg (${sanitizedWasteType}) from ${sanitizedZone}. Block Hash: ${newHash.substring(0, 16)}...`,
     category: 'COMPLIANCE',
     severity: 'INFO',
-    zone: sourceZone || 'Dhaka North City Corp',
+    zone: sanitizedZone,
     read: false,
     createdAt: new Date()
   });
@@ -290,13 +309,25 @@ apiRouter.get('/notifications', async (req: Request, res: Response) => {
 // POST /api/notifications
 apiRouter.post('/notifications', async (req: Request, res: Response) => {
   const { title, message, category, severity, zone } = req.body;
+
+  // SECURITY: Input validation for custom notification creation
+  if (!title || typeof title !== 'string' || title.trim().length === 0) {
+    return res.status(400).json({ error: 'Missing or invalid required field: title (non-empty string)' });
+  }
+  if (!message || typeof message !== 'string' || message.trim().length === 0) {
+    return res.status(400).json({ error: 'Missing or invalid required field: message (non-empty string)' });
+  }
+
+  const allowedSeverities = ['INFO', 'WARNING', 'CRITICAL'];
+  const allowedCategories = ['OVERFLOW_ALERT', 'COMPLIANCE', 'COLLECTION', 'SYSTEM'];
+
   const newNotif = {
     notifId: `NOTIF-${Date.now().toString().slice(-4)}`,
-    title: title || 'System Notification',
-    message: message || 'Notification details recorded.',
-    category: category || 'SYSTEM',
-    severity: severity || 'INFO',
-    zone: zone || 'Dhaka North City Corp',
+    title: String(title).trim().substring(0, 200),
+    message: String(message).trim().substring(0, 1000),
+    category: allowedCategories.includes(category) ? category : 'SYSTEM',
+    severity: allowedSeverities.includes(severity) ? severity : 'INFO',
+    zone: zone ? String(zone).trim().substring(0, 100) : 'Dhaka North City Corp',
     read: false,
     createdAt: new Date()
   };
