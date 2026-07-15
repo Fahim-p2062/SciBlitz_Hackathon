@@ -43,9 +43,9 @@ export const FleetTelemetryCards: React.FC<FleetTelemetryCardsProps> = ({
 
         <input
           type="range"
-          min={15000}
+          min={2000}
           max={95000}
-          step={5000}
+          step={1000}
           value={budgetBdt}
           onChange={(e) => setBudgetBdt(Number(e.target.value))}
           style={{
@@ -55,7 +55,7 @@ export const FleetTelemetryCards: React.FC<FleetTelemetryCardsProps> = ({
           }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.3rem' }}>
-          <span>৳ 15,000 (Min)</span>
+          <span>৳ 2,000 (Min)</span>
           <span>৳ 95,000 (Max)</span>
         </div>
       </div>
