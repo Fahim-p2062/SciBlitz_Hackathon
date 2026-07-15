@@ -160,9 +160,15 @@ let memoryNotifications = [
 // GET /api/stats
 apiRouter.get('/stats', async (req: Request, res: Response) => {
   try {
+    const totalRecycled = memoryLedger.reduce((sum, block) => {
+      const blockWeight = block.transactions?.reduce((tsum, tx) => tsum + (Number(tx.weightKg) || 0), 0) || 0;
+      return sum + blockWeight;
+    }, 0);
+    const co2Offset = Number((totalRecycled * 0.0031).toFixed(2));
+
     res.json({
-      totalRecycledKg: 1245.5,
-      co2OffsetTons: 3.84,
+      totalRecycledKg: Number(totalRecycled.toFixed(1)),
+      co2OffsetTons: co2Offset || 3.84,
       verifiedLedgerBlocks: memoryLedger.length,
       activeDustbins: memoryDustbins.length,
       criticalAlerts: memoryDustbins.filter(d => d.fillLevel >= 85).length,
@@ -170,6 +176,23 @@ apiRouter.get('/stats', async (req: Request, res: Response) => {
     });
   } catch (err) {
     res.status(500).json({ error: 'Failed to load stats' });
+  }
+});
+
+// GET /api/routes
+apiRouter.get('/routes', async (req: Request, res: Response) => {
+  try {
+    const stops = [
+      { order: 1, id: 'BIN-CTG-001', name: 'Agrabad Commercial Bin', fill: 91, priority: 'CRITICAL', time: '08:15 AM', x: 12, y: 75, wasteKg: 140 },
+      { order: 2, id: 'BIN-DHK-001', name: 'Gulshan-2 Circle Bin A', fill: 88, priority: 'CRITICAL', time: '09:00 AM', x: 30, y: 28, wasteKg: 132 },
+      { order: 3, id: 'BIN-CUET-002', name: 'CUET Shaheed Minar Square', fill: 82, priority: 'WARNING', time: '10:30 AM', x: 50, y: 65, wasteKg: 110 },
+      { order: 4, id: 'BIN-DHK-002', name: 'Banani Road 11 Bin B', fill: 74, priority: 'WARNING', time: '11:45 AM', x: 68, y: 32, wasteKg: 95 },
+      { order: 5, id: 'BIN-CUET-001', name: 'CUET Academic Hall Bin', fill: 65, priority: 'NORMAL', time: '01:15 PM', x: 84, y: 78, wasteKg: 80 },
+      { order: 6, id: 'BIN-DHK-003', name: 'Dhanmondi Lake Park Bin', fill: 42, priority: 'NORMAL', time: '02:30 PM', x: 92, y: 25, wasteKg: 55 }
+    ];
+    res.json(stops);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch route stops' });
   }
 });
 
@@ -197,6 +220,18 @@ apiRouter.post('/dustbins/:binId/empty', async (req: Request, res: Response) => 
   bin.fillLevel = 5;
   bin.status = 'NORMAL';
   bin.lastEmptiedAt = new Date();
+
+  memoryNotifications.unshift({
+    notifId: `NOTIF-${Date.now().toString().slice(-4)}`,
+    title: '🗑️ Dustbin Collection Completed',
+    message: `${bin.name} (${bin.binId}) in ${bin.zone} has been emptied and reset to 5% fill level.`,
+    category: 'COLLECTION',
+    severity: 'INFO',
+    zone: bin.zone,
+    read: false,
+    createdAt: new Date()
+  });
+
   res.json({ message: 'Dustbin collection scheduled/emptied successfully', dustbin: bin });
 });
 
@@ -232,12 +267,100 @@ apiRouter.post('/ledger/block', async (req: Request, res: Response) => {
   };
 
   memoryLedger.push(newBlock);
+
+  memoryNotifications.unshift({
+    notifId: `NOTIF-${Date.now().toString().slice(-4)}`,
+    title: `⚡ Blockchain Ledger Block #${newIndex} Minted`,
+    message: `Verified transaction of ${weightKg || 250}kg (${wasteType || 'RECYCLE'}) from ${sourceZone || 'Dhaka North City Corp'}. Block Hash: ${newHash.substring(0, 16)}...`,
+    category: 'COMPLIANCE',
+    severity: 'INFO',
+    zone: sourceZone || 'Dhaka North City Corp',
+    read: false,
+    createdAt: new Date()
+  });
+
   res.json(newBlock);
 });
 
 // GET /api/notifications
 apiRouter.get('/notifications', async (req: Request, res: Response) => {
   res.json(memoryNotifications);
+});
+
+// POST /api/notifications
+apiRouter.post('/notifications', async (req: Request, res: Response) => {
+  const { title, message, category, severity, zone } = req.body;
+  const newNotif = {
+    notifId: `NOTIF-${Date.now().toString().slice(-4)}`,
+    title: title || 'System Notification',
+    message: message || 'Notification details recorded.',
+    category: category || 'SYSTEM',
+    severity: severity || 'INFO',
+    zone: zone || 'Dhaka North City Corp',
+    read: false,
+    createdAt: new Date()
+  };
+  memoryNotifications.unshift(newNotif);
+  res.status(201).json(newNotif);
+});
+
+// POST /api/notifications/simulate
+apiRouter.post('/notifications/simulate', async (req: Request, res: Response) => {
+  const { type } = req.body;
+  const templates = [
+    {
+      title: '🚨 Emergency Dustbin Capacity Alert',
+      message: 'Banani Road 11 Bin B (BIN-DHK-002) fill sensor spiked above 92%. Temperature sensor reading 34°C indicates potential organic decomposition buildup.',
+      category: 'OVERFLOW_ALERT',
+      severity: 'CRITICAL',
+      zone: 'Dhaka North City Corp'
+    },
+    {
+      title: '✅ Blockchain Verification Confirmed',
+      message: 'New Ledger Block #3 successfully validated across 4 consensus nodes recording 820kg PET & High-Value E-Waste from Mirpur-10 Depot.',
+      category: 'COMPLIANCE',
+      severity: 'INFO',
+      zone: 'Dhaka North City Corp'
+    },
+    {
+      title: '⚠️ Fleet Route Optimization Notice',
+      message: 'TSP Route #4 diverted due to heavy traffic on Airport Road. Estimated collection delay: 18 minutes for 4 commercial bins.',
+      category: 'COLLECTION',
+      severity: 'WARNING',
+      zone: 'Dhaka North City Corp'
+    },
+    {
+      title: '🧪 Toxic E-Waste & Residual Warning',
+      message: 'High concentration of unsegregated lithium batteries detected during optical sorting scan at Chittagong Agrabad Transfer Station.',
+      category: 'SYSTEM',
+      severity: 'CRITICAL',
+      zone: 'Chittagong City Corp'
+    },
+    {
+      title: '🌱 CUET Zero-Waste Campus Milestone',
+      message: 'CUET Academic Hall achieved 100% organic waste diversion to local biogas digester during today shift.',
+      category: 'COMPLIANCE',
+      severity: 'INFO',
+      zone: 'CUET Campus'
+    }
+  ];
+
+  const template = type && templates.find(t => t.category === type)
+    ? templates.find(t => t.category === type)!
+    : templates[Math.floor(Math.random() * templates.length)];
+
+  const newNotif = {
+    notifId: `NOTIF-${Math.floor(1000 + Math.random() * 9000)}`,
+    title: template.title,
+    message: template.message,
+    category: template.category,
+    severity: template.severity as 'INFO' | 'WARNING' | 'CRITICAL',
+    zone: template.zone,
+    read: false,
+    createdAt: new Date()
+  };
+  memoryNotifications.unshift(newNotif);
+  res.status(201).json(newNotif);
 });
 
 // POST /api/notifications/:id/read
@@ -248,4 +371,39 @@ apiRouter.post('/notifications/:id/read', async (req: Request, res: Response) =>
     item.read = true;
   }
   res.json({ success: true, notification: item });
+});
+
+// POST /api/notifications/:id/action
+apiRouter.post('/notifications/:id/action', async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const item = memoryNotifications.find(n => n.notifId === id);
+  if (item) {
+    item.read = true;
+    // If it's an overflow alert or collection alert, reset matching bins if present
+    if (item.category === 'OVERFLOW_ALERT' || item.message.includes('BIN-')) {
+      const binMatch = item.message.match(/BIN-[A-Z]+-\d+/);
+      if (binMatch && binMatch[0]) {
+        const bin = memoryDustbins.find(b => b.binId === binMatch[0]);
+        if (bin) {
+          bin.fillLevel = 5;
+          bin.status = 'NORMAL';
+          bin.lastEmptiedAt = new Date();
+        }
+      }
+    }
+  }
+  res.json({ success: true, message: `Action executed for alert ${id}` });
+});
+
+// POST /api/notifications/clear-read
+apiRouter.post('/notifications/clear-read', async (req: Request, res: Response) => {
+  memoryNotifications = memoryNotifications.filter(n => !n.read);
+  res.json({ success: true, remaining: memoryNotifications });
+});
+
+// DELETE /api/notifications/:id
+apiRouter.delete('/notifications/:id', async (req: Request, res: Response) => {
+  const { id } = req.params;
+  memoryNotifications = memoryNotifications.filter(n => n.notifId !== id);
+  res.json({ success: true, deletedId: id });
 });

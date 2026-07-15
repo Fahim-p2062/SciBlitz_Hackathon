@@ -9,11 +9,11 @@ import {
   Sun, 
   Moon
 } from 'lucide-react';
-import { DashboardPage } from './pages/DashboardPage';
-import { ClassifierPage } from './pages/ClassifierPage';
-import { DustbinsPage } from './pages/DustbinsPage';
-import { RouteOptimizerPage } from './pages/RouteOptimizerPage';
-import { NotificationsPage } from './pages/NotificationsPage';
+import { DashboardPage } from './pages/dashboard';
+import { ClassifierPage } from './pages/classifier';
+import { DustbinsPage } from './pages/dustbins';
+import { RouteOptimizerPage } from './pages/routes';
+import { NotificationsPage } from './pages/notifications';
 
 export const App: React.FC = () => {
   const [currentTab, setCurrentTab] = useState<
