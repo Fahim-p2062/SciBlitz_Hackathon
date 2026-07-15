@@ -3,7 +3,7 @@ import * as cocoSsd from '@tensorflow-models/coco-ssd';
 import '@tensorflow/tfjs';
 import type { ComprehensiveWasteTaxonomy, DetectionDatabaseEntry } from './types';
 import { comprehensivePresets } from './presets';
-import { detectionDatabaseEntries, findDatabaseMatches, searchDatabaseEntries } from './detectionDatabase';
+import { detectionDatabaseEntries, findDatabaseMatches } from './detectionDatabase';
 import { apiFetch } from '../../config/api';
 
 export function useClassifier() {
@@ -235,7 +235,7 @@ export function useClassifier() {
         commonSourceContext: dbMatch.common_source_context || 'Dining tables, kitchens, hygiene boxes, restaurants',
         detectionPriority: 'Medium',
         conditionState: conditionFilter !== 'All' ? conditionFilter : 'Intact',
-        natureCategory: 'Organic / Paper Cellulose',
+        natureCategory: 'Organic / Biodegradable',
         compositionDetail: 'Soft Cellulose Wood Pulp Fiber',
         operationalStream: 'RECYCLABLE',
         processingPathway: 'Slurry Pulper De-inking & Reprocessing (or Industrial Composting if soiled)',

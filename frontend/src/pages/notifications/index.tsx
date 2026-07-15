@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bell, Check, Trash2, Plus, Zap, Search, Filter, ShieldAlert, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Bell, Check, Trash2, Plus, Zap, Search, Filter, CheckCircle2 } from 'lucide-react';
 import { useNotificationsData } from './useNotificationsData';
 import { NotificationItemCard } from './components/NotificationItemCard';
 
@@ -199,14 +199,35 @@ export const NotificationsPage: React.FC = () => {
             ))}
           </div>
 
-          {/* Zone selector */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Filter size={15} color="#94a3b8" />
+          {/* Category & Zone selectors */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              <Filter size={14} color="#94a3b8" />
+              <select
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                style={{
+                  padding: '0.45rem 0.75rem',
+                  borderRadius: '6px',
+                  background: 'rgba(0,0,0,0.4)',
+                  border: '1px solid var(--border-glass)',
+                  color: '#fff',
+                  fontSize: '0.8rem'
+                }}
+              >
+                <option value="ALL">📑 All Categories</option>
+                <option value="OVERFLOW_ALERT">🚨 Overflow Alerts</option>
+                <option value="COMPLIANCE">✅ Compliance & Ledger</option>
+                <option value="COLLECTION">🚚 Fleet & Collection</option>
+                <option value="SYSTEM">🧪 System & Residual</option>
+              </select>
+            </div>
+
             <select
               value={zoneFilter}
               onChange={(e) => setZoneFilter(e.target.value)}
               style={{
-                padding: '0.45rem 0.8rem',
+                padding: '0.45rem 0.75rem',
                 borderRadius: '6px',
                 background: 'rgba(0,0,0,0.4)',
                 border: '1px solid var(--border-glass)',

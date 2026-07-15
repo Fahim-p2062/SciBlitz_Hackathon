@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldAlert, AlertTriangle, CheckCircle2, Check, Trash2, Truck, ShieldCheck, Wrench } from 'lucide-react';
+import { ShieldAlert, AlertTriangle, CheckCircle2, Check, Trash2 } from 'lucide-react';
 import type { NotifItem } from '../types';
 
 interface NotificationItemCardProps {
