@@ -237,4 +237,4 @@ npm run build
 npm run dev
 ```
 
-Visit **http://localhost:5173** to explore EcoSortha locally or access our live production deployment at **[https://sci-blitz-hackathon.vercel.app/](https://sci-blitz-hackathon.vercel.app/)**.
+
